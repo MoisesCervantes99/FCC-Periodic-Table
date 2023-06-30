@@ -1,0 +1,56 @@
+#!/bin/bash
+PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align --tuples-only -c"
+
+if [[ -z $1 ]] # if no input is given
+then
+  echo "Please provide an element as an argument."
+elif [[ $1 =~ [0-9] ]] # if input is a number
+then
+  ANUM=$($PSQL "select atomic_number from elements where atomic_number = $1")
+  if [[ -z $ANUM ]] # if number provided cannot be found in database
+  then
+    echo "I could not find that element in the database."
+  else # else find all information and print in format specified
+    NAME=$($PSQL "select name from elements where atomic_number = $ANUM")
+    SYM=$($PSQL "select symbol from elements where atomic_number = $ANUM")
+    TYPE=$($PSQL "select type from types full join properties using(type_id) where atomic_number = $ANUM")
+    AMASS=$($PSQL "select atomic_mass from properties where atomic_number = $ANUM")
+    MP=$($PSQL "select melting_point_celsius from properties where atomic_number = $ANUM")
+    BP=$($PSQL "select boiling_point_celsius from properties where atomic_number = $ANUM")
+
+    echo -e "The element with atomic number $ANUM is $NAME ($SYM). It's a $TYPE, with a mass of $AMASS amu. $NAME has a melting point of $MP celsius and a boiling point of $BP celsius."
+  fi
+elif [[ $1 =~ ^[A-Z]$ || $1 =~ ^[A-Z][a-z]$ ]] # if input is either a single capital letter or two letters (the first uppercased and the second lowercased)
+then
+  SYM=$($PSQL "select symbol from elements where symbol = '$1'")
+
+  if [[ -z $SYM ]] # if letter or letters provided cannot be found in database
+  then
+    echo "I could not find that element in the database."
+  else # else find all information and print in format specified
+    NAME=$($PSQL "select name from elements where symbol = '$SYM'")
+    ANUM=$($PSQL "select atomic_number from elements where symbol = '$SYM'")
+    TYPE=$($PSQL "select type from types full join properties using(type_id) where atomic_number = $ANUM")
+    AMASS=$($PSQL "select atomic_mass from properties where atomic_number = $ANUM")
+    MP=$($PSQL "select melting_point_celsius from properties where atomic_number = $ANUM")
+    BP=$($PSQL "select boiling_point_celsius from properties where atomic_number = $ANUM")
+
+    echo -e "The element with atomic number $ANUM is $NAME ($SYM). It's a $TYPE, with a mass of $AMASS amu. $NAME has a melting point of $MP celsius and a boiling point of $BP celsius."
+  fi
+else # else the input is assumed to be a name
+  NAME=$($PSQL "select name from elements where name = '$1'")
+
+  if [[ -z $NAME ]] # if name provided cannot be found in database
+  then
+    echo "I could not find that element in the database."
+  else # else find all information and print in format specified
+    ANUM=$($PSQL "select atomic_number from elements where name = '$NAME'")
+    SYM=$($PSQL "select symbol from elements where name = '$NAME'")
+    TYPE=$($PSQL "select type from types full join properties using(type_id) where atomic_number = $ANUM")
+    AMASS=$($PSQL "select atomic_mass from properties where atomic_number = $ANUM")
+    MP=$($PSQL "select melting_point_celsius from properties where atomic_number = $ANUM")
+    BP=$($PSQL "select boiling_point_celsius from properties where atomic_number = $ANUM")
+
+    echo -e "The element with atomic number $ANUM is $NAME ($SYM). It's a $TYPE, with a mass of $AMASS amu. $NAME has a melting point of $MP celsius and a boiling point of $BP celsius."
+  fi
+fi
